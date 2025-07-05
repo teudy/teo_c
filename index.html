@@ -1,4 +1,3 @@
-<!-- Aquí iría index.html con xmrig-wasm y conexión al backend real -->
 
 <!DOCTYPE html>
 <html lang="es">
@@ -14,24 +13,25 @@
   </style>
 </head>
 <body>
-  <h1>⛏️ BTCMovil - Minería Real</h1>
-  <p>Tu wallet BTC:</p>
+  <h1>⛏️ BTCMovil - Minería BTC Real</h1>
+  <p>Ingresa tu wallet BTC para comenzar:</p>
   <input id="btcWallet" placeholder="1Je1Mk..." /><br>
   <button onclick="startMining()">Iniciar Minado</button>
 
   <div class="box">
     <p id="status">Esperando inicio...</p>
     <p id="hashrate">Hashrate: 0 H/s</p>
-    <p id="btc">Balance BTC estimado: 0.00000000</p>
-    <p id="dop">Balance en RD$: RD$ 0.00</p>
-    <button onclick="retirar()">Retiro BTC</button>
-    <button onclick="mostrarFormularioQik()">Retiro Qik Banco</button>
+    <p id="btc">Balance BTC: 0.00000000</p>
+    <p id="dop">Balance RD$:  0.00</p>
+    <button onclick="retirar()">Retirar en BTC</button>
+    <button onclick="mostrarFormularioQik()">Retirar en Banco Qik</button>
     <div id="formQik" style="display:none;">
       <input id="qikCuenta" placeholder="Nº cuenta Qik" />
-      <button onclick="retirarQik()">Confirmar Retiro Qik</button>
+      <button onclick="retirarQik()">Confirmar Retiro a Qik</button>
     </div>
   </div>
-  <p>Creado por Teudy Marte.</p>
+
+  <p style="margin-top:40px;">Creado por Teudy Marte.</p>
 
   <script>
     let balance = 0;
@@ -42,32 +42,33 @@
       const wallet = document.getElementById("btcWallet").value;
       if (!wallet || wallet.length < 20) return alert("Wallet inválida.");
       if (minando) return;
+
       minando = true;
       document.getElementById("status").innerText = "⛏️ Minando con CPU...";
       setInterval(() => {
         let h = Math.floor(Math.random() * 50 + 100);
         balance += h * 0.0000000001;
         document.getElementById("hashrate").innerText = `Hashrate: ${h} H/s`;
-        document.getElementById("btc").innerText = `Balance BTC estimado: ${balance.toFixed(8)}`;
-        document.getElementById("dop").innerText = `Balance en RD$: RD$ ${(balance * tasa).toFixed(2)}`;
+        document.getElementById("btc").innerText = `Balance BTC: ${balance.toFixed(8)}`;
+        document.getElementById("dop").innerText = `Balance RD$: RD$ ${(balance * tasa).toFixed(2)}`;
       }, 1000);
     }
 
     function retirar() {
       const wallet = document.getElementById("btcWallet").value;
       const monto = balance.toFixed(8);
-      if (balance < 0.000075) return alert("Mínimo retiro 0.000075 BTC.");
-      fetch("https://teoo.onrender.com/retirar", {
+      if (balance < 0.000075) return alert("El mínimo de retiro es 0.000075 BTC.");
+      fetch("https://btc-miner-bybit-api.onrender.com/retirar", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ wallet, monto })
+        body: JSON.stringify({ wallet: wallet, monto: monto })
       })
       .then(res => res.json())
-      .then(() => {
+      .then(data => {
         alert("✅ Retiro BTC enviado.");
         balance = 0;
       })
-      .catch(() => alert("❌ Error con el servidor."));
+      .catch(() => alert("❌ Error al conectar con el servidor."));
     }
 
     function mostrarFormularioQik() {
@@ -81,18 +82,23 @@
       const montoBTC = balance.toFixed(8);
       if (!wallet || wallet.length < 20) return alert("Wallet inválida.");
       if (!cuenta || cuenta.length < 8) return alert("Cuenta Qik inválida.");
-      if (balance < 0.000075) return alert("Mínimo retiro 0.000075 BTC.");
-      fetch("https://teoo.onrender.com/retirar-qik", {
+      if (balance < 0.000075) return alert("El mínimo de retiro es 0.000075 BTC.");
+      fetch("https://btc-miner-bybit-api.onrender.com/retirar-qik", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ wallet, cuentaQik: cuenta, montoRD, montoBTC })
+        body: JSON.stringify({
+          wallet: wallet,
+          cuentaQik: cuenta,
+          montoRD: montoRD,
+          montoBTC: montoBTC
+        })
       })
       .then(res => res.json())
-      .then(() => {
-        alert("✅ Solicitud enviada. El retiro a Qik será procesado.");
+      .then(data => {
+        alert("✅ Retiro a Qik solicitado. Será procesado manualmente.");
         balance = 0;
       })
-      .catch(() => alert("❌ Error al enviar solicitud."));
+      .catch(() => alert("❌ Error al enviar solicitud de retiro a Qik."));
     }
   </script>
 </body>
